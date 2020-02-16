@@ -9,7 +9,6 @@ import logging
 import datetime
 import threading
 import json
-#from telegram.ext.dispatcher import run_async  # TO DO
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, \
     Filters, CallbackQueryHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -39,7 +38,6 @@ class Cookhouse:
     def __init__(self,num):
         # {'NM':{"Lunch": {"Monday":"", :"Tuesday":"","Wednesday":"","Thursday":"","Friday":""} },"Breakfast":....
         self.num=num
-
         
         food_menu={}
         prefs=["NM","M","V"]
@@ -58,12 +56,13 @@ class Cookhouse:
         self.menu_date=None
 
     def get_lunch_menu(self,typ):
-        if typ=="NM":
-            return self.food_menu["NM"]["Lunch"]
-        elif typ=="M":
-            return self.food_menu["M"]["Lunch"]
-        elif typ=="V":
-            return self.food_menu["V"]["Lunch"]
+        return self.food_menu[typ]["Lunch"]
+
+    def get_breakfast_menu(self, typ):
+        return self.food_menu[typ]["Breakfast"]
+
+    def get_dinner_menu(self, typ):
+        return self.food_menu[typ]["Dinner"]
 
     def set_lunch_menu(self):
         global menu_ws
@@ -82,14 +81,6 @@ class Cookhouse:
             self.food_menu["V"]["Lunch"][key] = [cell_list[i+12].value,pic_list[i+12].value]
             i += 1
 
-    def get_breakfast_menu(self,typ):
-        if typ=="NM":
-            return self.food_menu["NM"]["Breakfast"]
-        elif typ=="M":
-            return self.food_menu["M"]["Breakfast"]
-        elif typ=="V":
-            return self.food_menu["V"]["Breakfast"]
-
     def set_breakfast_menu(self):
         global menu_ws
         num=self.num
@@ -106,14 +97,6 @@ class Cookhouse:
             self.food_menu["M"]["Breakfast"][key] = [cell_list[i+6].value,pic_list[i+6].value]
             self.food_menu["V"]["Breakfast"][key] = [cell_list[i+12].value,pic_list[i+12].value]
             i += 1
-
-    def get_dinner_menu(self,typ):
-        if typ=="NM":
-            return self.food_menu["NM"]["Dinner"]
-        elif typ=="M":
-            return self.food_menu["M"]["Dinner"]
-        elif typ=="V":
-            return self.food_menu["V"]["Dinner"]
 
     def set_dinner_menu(self):
         global menu_ws
@@ -136,7 +119,7 @@ qs_menu={}
 
 greeting="Enjoy your meal! " + u'\U0001f60b' + " How else can i help?"
 
-num_cookhouse=1
+num_cookhouse = 1
 
 scope = ['https://spreadsheets.google.com/feeds',
      'https://www.googleapis.com/auth/drive']
@@ -236,7 +219,6 @@ def menu_callback(bot,update):
         menu_dinner(bot,query,"V",0)
 
         
-
     logging.info(str(query.message.chat_id)+" "+str(query.message.chat.first_name)+" has selected Option "+str(option))
     
 
@@ -312,7 +294,6 @@ def ranks(bot, update):
     bot.send_photo(chat_id=chat_id, photo=rank_url)
     
 
-    
 def menu_lunch(bot, update, typ, num):
 
     chat_id = update.message.chat_id
@@ -432,40 +413,30 @@ def start(bot, update):
 def cookhouse_menu(bot, update):
     update = update.callback_query
     bot.answer_callback_query(update.id)
-    data=update.data
+    data = update.data
 
-    if data=="Lunch":
+    if data =="Lunch":
         keyboard = [[InlineKeyboardButton('Non Muslim', callback_data='1'),
                     InlineKeyboardButton('Muslim', callback_data='2')],
                     [InlineKeyboardButton('Vegetarian', callback_data='3'),
                      InlineKeyboardButton('Survey', callback_data='4')]]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        update.message.reply_text("Blk 826 Cookhouse, Which " + data +" menu are you looking for?",
-                                  reply_markup=reply_markup)
-
-    elif data=="Breakfast":
+    elif data =="Breakfast":
         keyboard = [[InlineKeyboardButton('Non Muslim', callback_data='5'),
                     InlineKeyboardButton('Muslim', callback_data='6')],
                     [InlineKeyboardButton('Vegetarian', callback_data='7'),
                      InlineKeyboardButton('Survey', callback_data='4')]]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        update.message.reply_text("Blk 826 Cookhouse, Which " + data +" menu are you looking for?",
-                                  reply_markup=reply_markup)
-
-    elif data=="Dinner":
+    elif data =="Dinner":
         keyboard = [[InlineKeyboardButton('Non Muslim', callback_data='8'),
                     InlineKeyboardButton('Muslim', callback_data='9')],
                     [InlineKeyboardButton('Vegetarian', callback_data='10'),
                      InlineKeyboardButton('Survey', callback_data='4')]]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text("Blk 826 Cookhouse, Which " + data +" menu are you looking for?",
-                                  reply_markup=reply_markup)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text("Blk 826 Cookhouse, Which " + data + " menu are you looking for?",
+                              reply_markup=reply_markup)
  
     try:
         chat_id = update.message.chat_id
@@ -498,7 +469,7 @@ def parse(bot, update):
     msg_raw = update.message.text
     msg_parsed = msg_raw.lower().replace(' ', '')
 
-    if not name and not msg_parsed:
+    if not name or not msg_parsed:
         return
     elif 'moose' in name and 'celess' in msg_parsed:
         bot.sendMessage(chat_id=chat_id, text='Go talk to her!')
