@@ -12,5 +12,8 @@
 # below:
 .git
 .gitignore
+main old.py
+README.MD
+
 
 node_modules
